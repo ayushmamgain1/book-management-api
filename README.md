@@ -1,102 +1,370 @@
-# Book Management REST API
+# Book Management API
 
-A RESTful Book Management API built using **Spring Boot, Spring Data JPA, Hibernate, and PostgreSQL**.
+A RESTful Book Management API built with **Spring Boot**, **Spring Data JPA**, **PostgreSQL**, and **Spring Security with JWT authentication**.
 
-This project demonstrates CRUD operations, JPA entity relationships, custom repository queries, request validation, service-layer architecture, and exception handling.
+The application provides CRUD operations for books and authors, along with stateless JWT-based authentication and authorization.
 
-## Technologies Used
+---
+
+## 🚀 Features
+
+### Book Management
+
+* Create a book
+* Get all books
+* Get a book by ID
+* Update a book
+* Delete a book
+* Search books by keyword
+* Find books by maximum price
+* Find books by author
+
+### Author Management
+
+* Create an author
+* Get all authors
+* Get an author by ID
+* Update an author
+* Delete an author
+
+### Authentication & Security
+
+* User registration
+* User login
+* BCrypt password encryption
+* Custom `UserDetailsService`
+* JWT token generation
+* JWT token validation
+* JWT authentication filter using `OncePerRequestFilter`
+* Stateless session management
+* Protected API endpoints
+* Custom JSON authentication error responses
+* Duplicate username/email validation
+* Invalid login credential handling
+
+---
+
+## 🛠️ Technologies Used
 
 * Java 21
 * Spring Boot
-* Spring Web
+* Spring Security
 * Spring Data JPA
 * Hibernate
 * PostgreSQL
-* Jakarta Validation
+* JWT / JSON Web Token
+* JJWT
+* Jakarta Bean Validation
 * Maven
 * Postman
-* Git & GitHub
 
-## Project Features
+---
 
-* Create, read, update, and delete authors
-* Create, read, update, and delete books
-* PostgreSQL database persistence
-* JPA/Hibernate entity mapping
-* One-to-many relationship between authors and books
-* Many-to-one relationship between books and authors
-* Spring Data JPA repositories
-* Custom JPQL queries using `@Query`
-* Search books by title
-* Filter books by maximum price
-* Find books by author
-* Jakarta Bean Validation
-* Global exception handling
-* RESTful API endpoints
-* Proper HTTP status codes
-
-## Project Structure
+## 📁 Project Structure
 
 ```text
-book-management-api/
-│
-├── src/
-│   └── main/
-│       ├── java/
-│       │   └── com/example/bookapi/
-│       │       ├── controller/
-│       │       │   ├── AuthorController.java
-│       │       │   └── BookController.java
-│       │       │
-│       │       ├── entity/
-│       │       │   ├── Author.java
-│       │       │   └── Book.java
-│       │       │
-│       │       ├── repository/
-│       │       │   ├── AuthorRepository.java
-│       │       │   └── BookRepository.java
-│       │       │
-│       │       ├── service/
-│       │       │   ├── AuthorService.java
-│       │       │   └── BookService.java
-│       │       │
-│       │       ├── exception/
-│       │       │   ├── ResourceNotFoundException.java
-│       │       │   └── GlobalExceptionHandler.java
-│       │       │
-│       │       └── BookManagementApplication.java
-│       │
-│       └── resources/
-│           └── application.properties
-│
-├── .gitignore
-├── pom.xml
-└── README.md
+src
+└── main
+    └── java
+        └── com.example.bookapi
+            │
+            ├── config
+            │   └── SecurityConfig.java
+            │
+            ├── controller
+            │   ├── AuthController.java
+            │   ├── BookController.java
+            │   └── AuthorController.java
+            │
+            ├── dto
+            │   ├── LoginRequest.java
+            │   └── RegisterRequest.java
+            │
+            ├── entity
+            │   ├── User.java
+            │   ├── Book.java
+            │   └── Author.java
+            │
+            ├── exception
+            │   ├── UsernameAlreadyExistsException.java
+            │   ├── EmailAlreadyExistsException.java
+            │   ├── InvalidCredentialsException.java
+            │   └── GlobalExceptionHandler.java
+            │
+            ├── repository
+            │   ├── UserRepository.java
+            │   ├── BookRepository.java
+            │   └── AuthorRepository.java
+            │
+            ├── security
+            │   ├── CustomUserDetailsService.java
+            │   ├── JwtService.java
+            │   ├── JwtAuthenticationFilter.java
+            │   └── CustomAuthenticationEntryPoint.java
+            │
+            └── service
+                ├── AuthService.java
+                ├── BookService.java
+                └── AuthorService.java
 ```
 
-## Database Configuration
+---
 
-This application uses **PostgreSQL**.
+## 🔐 Authentication Flow
 
-Create a PostgreSQL database named:
+The application uses stateless JWT authentication.
 
 ```text
-book_management
+Client
+  │
+  │ Register
+  ▼
+/api/auth/register
+  │
+  │ BCrypt password hashing
+  ▼
+PostgreSQL
 ```
 
-The application uses the default PostgreSQL port:
+For login:
 
 ```text
-5432
+Client
+  │
+  │ username + password
+  ▼
+/api/auth/login
+  │
+  ▼
+AuthenticationManager
+  │
+  ▼
+CustomUserDetailsService
+  │
+  ▼
+BCrypt password verification
+  │
+  ▼
+JWT Token
+  │
+  ▼
+Client
 ```
 
-Configure the database connection in `application.properties`.
+For protected endpoints:
 
-For security, the database password should be provided through an environment variable instead of being stored directly in the source code.
+```text
+Client
+  │
+  │ Authorization: Bearer <JWT>
+  ▼
+JwtAuthenticationFilter
+  │
+  ▼
+JWT validation
+  │
+  ▼
+SecurityContext
+  │
+  ▼
+Protected Controller
+```
+
+---
+
+## 🔑 API Endpoints
+
+### Authentication
+
+| Method | Endpoint             | Authentication |
+| ------ | -------------------- | -------------- |
+| POST   | `/api/auth/register` | Public         |
+| POST   | `/api/auth/login`    | Public         |
+
+### Books
+
+| Method | Endpoint                              | Authentication |
+| ------ | ------------------------------------- | -------------- |
+| GET    | `/api/books`                          | JWT Required   |
+| GET    | `/api/books/{id}`                     | JWT Required   |
+| POST   | `/api/books`                          | JWT Required   |
+| PUT    | `/api/books/{id}`                     | JWT Required   |
+| DELETE | `/api/books/{id}`                     | JWT Required   |
+| GET    | `/api/books/search?keyword={keyword}` | JWT Required   |
+| GET    | `/api/books/price?maxPrice={price}`   | JWT Required   |
+| GET    | `/api/books/author/{authorId}`        | JWT Required   |
+
+### Authors
+
+| Method | Endpoint            | Authentication |
+| ------ | ------------------- | -------------- |
+| GET    | `/api/authors`      | JWT Required   |
+| GET    | `/api/authors/{id}` | JWT Required   |
+| POST   | `/api/authors`      | JWT Required   |
+| PUT    | `/api/authors/{id}` | JWT Required   |
+| DELETE | `/api/authors/{id}` | JWT Required   |
+
+---
+
+## 📝 Registration
+
+### Request
+
+```http
+POST /api/auth/register
+Content-Type: application/json
+```
+
+```json
+{
+    "username": "ayush",
+    "email": "ayush@example.com",
+    "password": "password123"
+}
+```
+
+### Response
+
+```json
+{
+    "id": 1,
+    "username": "ayush",
+    "email": "ayush@example.com",
+    "role": "USER"
+}
+```
+
+Passwords are stored using BCrypt hashing and are never returned in API responses.
+
+---
+
+## 🔓 Login
+
+### Request
+
+```http
+POST /api/auth/login
+Content-Type: application/json
+```
+
+```json
+{
+    "username": "ayush",
+    "password": "password123"
+}
+```
+
+### Response
+
+```json
+{
+    "token": "eyJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+The returned JWT must be sent with protected requests.
+
+---
+
+## 🔒 Using JWT Authentication
+
+Add the following HTTP header:
+
+```http
+Authorization: Bearer <JWT_TOKEN>
+```
 
 Example:
 
+```http
+GET /api/books
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+```
+
+Requests to protected endpoints without a valid JWT return:
+
+```json
+{
+    "status": 401,
+    "error": "Unauthorized",
+    "message": "Authentication is required",
+    "path": "/api/books"
+}
+```
+
+---
+
+## ❌ Authentication Error Handling
+
+### Invalid Login
+
+If an incorrect username or password is provided:
+
+```json
+{
+    "status": 401,
+    "error": "Unauthorized",
+    "message": "Invalid username or password"
+}
+```
+
+### Duplicate Username
+
+```json
+{
+    "status": 400,
+    "error": "Bad Request",
+    "message": "Username already taken"
+}
+```
+
+### Duplicate Email
+
+```json
+{
+    "status": 400,
+    "error": "Bad Request",
+    "message": "Email already registered"
+}
+```
+
+---
+
+## ⚙️ Configuration
+
+Create the required environment variables before starting the application.
+
+### PostgreSQL
+
+The application expects:
+
+```text
+DB_PASSWORD=your_postgresql_password
+```
+
+### JWT
+
+The application also requires:
+
+```text
+JWT_SECRET=your_long_random_jwt_secret
+```
+
+The JWT secret should be sufficiently long for HMAC signing.
+
+Do **not** commit real passwords or JWT secrets to GitHub.
+
+---
+
+## 🗄️ Database Configuration
+
+The application uses PostgreSQL.
+
+Example configuration:
+
 ```properties
+spring.application.name=book-management-api
+
 spring.datasource.url=jdbc:postgresql://localhost:5432/book_management
 spring.datasource.username=postgres
 spring.datasource.password=${DB_PASSWORD}
@@ -106,291 +374,169 @@ spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.format_sql=true
 ```
 
-Set the environment variable before running the application.
+Create the database before starting the application:
 
-### Windows PowerShell
-
-```powershell
-$env:DB_PASSWORD="your_postgresql_password"
+```sql
+CREATE DATABASE book_management;
 ```
 
-## Running the Application
+---
+
+## ▶️ Running the Application
 
 ### 1. Clone the repository
 
 ```bash
 git clone https://github.com/ayushmamgain1/book-management-api
+cd book-management-api
 ```
 
-### 2. Open the project
+### 2. Configure environment variables
 
-Open the project in IntelliJ IDEA or another Java IDE.
+PowerShell:
 
-### 3. Configure PostgreSQL
-
-Make sure PostgreSQL is running and the `book_management` database exists.
-
-### 4. Configure the database password
-
-Set the `DB_PASSWORD` environment variable.
-
-### 5. Run the application
-
-Using Maven:
-
-```bash
-mvn spring-boot:run
+```powershell
+$env:DB_PASSWORD="your_postgresql_password"
+$env:JWT_SECRET="your_long_random_jwt_secret"
 ```
 
-Or run:
+### 3. Run tests
 
-```text
-BookManagementApplication.java
+```powershell
+.\mvnw.cmd clean test
 ```
 
-from your IDE.
+### 4. Start the application
 
-The application starts on:
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+The application runs on:
 
 ```text
 http://localhost:8080
 ```
 
-## API Endpoints
+---
 
-### Author Endpoints
+## 🧪 Postman Testing
 
-| Method | Endpoint            | Description         |
-| ------ | ------------------- | ------------------- |
-| GET    | `/api/authors`      | Get all authors     |
-| GET    | `/api/authors/{id}` | Get author by ID    |
-| POST   | `/api/authors`      | Create a new author |
-| PUT    | `/api/authors/{id}` | Update an author    |
-| DELETE | `/api/authors/{id}` | Delete an author    |
+The APIs were tested using Postman.
 
-### Book Endpoints
+The authentication flow tested includes:
 
-| Method | Endpoint                         | Description                     |
-| ------ | -------------------------------- | ------------------------------- |
-| GET    | `/api/books`                     | Get all books                   |
-| GET    | `/api/books/{id}`                | Get book by ID                  |
-| POST   | `/api/books`                     | Create a new book               |
-| PUT    | `/api/books/{id}`                | Update a book                   |
-| DELETE | `/api/books/{id}`                | Delete a book                   |
-| GET    | `/api/books/search?keyword=java` | Search books by title           |
-| GET    | `/api/books/price?maxPrice=500`  | Find books within maximum price |
-| GET    | `/api/books/author/{authorId}`   | Get books by author             |
+1. User registration
+2. Duplicate username handling
+3. Duplicate email handling
+4. Successful login
+5. Invalid login credentials
+6. JWT generation
+7. Accessing protected endpoints without a token
+8. Accessing protected endpoints with a valid JWT
+9. Book CRUD operations
+10. Book search/filter endpoints
+11. Author CRUD operations
 
-## Sample API Requests
-
-### Create Author
-
-**POST**
+### Authentication Test Flow
 
 ```text
-http://localhost:8080/api/authors
+Register
+   ↓
+Login
+   ↓
+Receive JWT
+   ↓
+Set Bearer Token in Postman
+   ↓
+Access protected APIs
 ```
 
-Request body:
-
-```json
-{
-  "name": "J.K. Rowling",
-  "email": "jkrowling@example.com"
-}
-```
-
-### Create Book
-
-**POST**
-
-```text
-http://localhost:8080/api/books
-```
-
-Request body:
-
-```json
-{
-  "title": "Harry Potter and the Philosopher's Stone",
-  "isbn": "9780747532699",
-  "price": 599.0,
-  "author": {
-    "id": 1
-  }
-}
-```
-
-### Search Books
-
-**GET**
-
-```text
-http://localhost:8080/api/books/search?keyword=Harry
-```
-
-### Filter by Price
-
-**GET**
-
-```text
-http://localhost:8080/api/books/price?maxPrice=600
-```
-
-### Find Books by Author
-
-**GET**
-
-```text
-http://localhost:8080/api/books/author/1
-```
-
-## Entity Relationships
-
-The application contains two main entities:
-
-### Author
-
-An author can have multiple books.
-
-```text
-Author 1 ─────────── * Book
-```
-
-This is implemented using:
-
-```java
-@OneToMany(mappedBy = "author")
-```
-
-### Book
-
-Each book belongs to one author.
-
-This is implemented using:
-
-```java
-@ManyToOne
-@JoinColumn(name = "author_id")
-```
-
-## Validation
-
-The API uses Jakarta Bean Validation to validate incoming request data.
-
-Examples include:
-
-```java
-@NotNull
-@Size
-@Email
-```
-
-For example, author email addresses are validated using:
-
-```java
-@Email
-```
-
-and author names are validated using:
-
-```java
-@NotNull
-@Size(min = 2, max = 100)
-```
-
-Invalid requests return an HTTP `400 Bad Request` response.
-
-## Custom Repository Queries
-
-The project uses Spring Data JPA repositories and custom JPQL queries.
-
-Example:
-
-```java
-@Query("SELECT b FROM Book b WHERE b.price <= :maxPrice")
-List<Book> findBooksByMaximumPrice(@Param("maxPrice") Double maxPrice);
-```
-
-Another query provides title-based searching:
-
-```java
-@Query("SELECT b FROM Book b WHERE LOWER(b.title) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-List<Book> searchBooks(@Param("keyword") String keyword);
-```
-
-## Exception Handling
-
-The application contains a global exception handler using:
-
-```java
-@RestControllerAdvice
-```
-
-It handles:
-
-* Resource not found errors
-* Validation errors
-
-For example, requesting a book that does not exist returns:
-
-```json
-{
-  "status": 404,
-  "error": "Not Found",
-  "message": "Book not found with id: 999"
-}
-```
-
-## Testing
-
-The API was tested using **Postman**.
-
-Tested functionality includes:
-
-* Author creation
-* Author retrieval
-* Author update
-* Author deletion
-* Book creation
-* Book retrieval
-* Book update
-* Book deletion
-* Book search
-* Price filtering
-* Author-based book filtering
-* Validation errors
-* Resource-not-found handling
-* JPA author-book relationship
-
-## Internship Requirements Covered
-
-| Requirement        | Implementation                     |
-| ------------------ | ---------------------------------- |
-| Spring Boot        | Spring Boot application            |
-| REST API           | `@RestController`                  |
-| GET                | Implemented                        |
-| POST               | Implemented                        |
-| PUT                | Implemented                        |
-| DELETE             | Implemented                        |
-| JPA Entity         | `@Entity`, `@Table`                |
-| One-to-Many        | `Author → Books`                   |
-| Many-to-One        | `Book → Author`                    |
-| JpaRepository      | Author & Book repositories         |
-| Custom Queries     | `@Query`                           |
-| Validation         | `@NotNull`, `@Size`, `@Email`      |
-| Service Layer      | AuthorService & BookService        |
-| Exception Handling | GlobalExceptionHandler             |
-| PostgreSQL         | Configured as persistence database |
-
-## Author
-
-**Ayush Mamgain**
-
-Java / Spring Boot Developer
+A Postman collection is included with the project for API testing.
 
 ---
 
-## License
+## 🧪 Security Architecture
 
-This project was created for educational and internship purposes.
+The main security components are:
+
+### `SecurityConfig`
+
+Configures:
+
+* Public authentication endpoints
+* Protected API endpoints
+* Stateless sessions
+* JWT filter
+* Authentication entry point
+* BCrypt password encoder
+
+### `CustomUserDetailsService`
+
+Loads users from the PostgreSQL database and provides them to Spring Security.
+
+### `JwtService`
+
+Responsible for:
+
+* JWT generation
+* JWT parsing
+* Username extraction
+* Token expiration validation
+* Signature validation
+
+### `JwtAuthenticationFilter`
+
+Extends:
+
+```java
+OncePerRequestFilter
+```
+
+It extracts the JWT from:
+
+```http
+Authorization: Bearer <token>
+```
+
+and authenticates the user if the token is valid.
+
+### `CustomAuthenticationEntryPoint`
+
+Returns JSON responses for unauthenticated requests.
+
+---
+
+## 🔐 Security Practices
+
+* Passwords are hashed using BCrypt.
+* Passwords are not returned through API responses.
+* JWT authentication is stateless.
+* Database passwords are stored through environment variables.
+* JWT secrets are stored through environment variables.
+* Protected endpoints require authentication.
+* Invalid credentials do not reveal whether a username exists.
+
+---
+
+## 📦 Build
+
+Build the project using:
+
+```powershell
+.\mvnw.cmd clean package
+```
+
+Run tests using:
+
+```powershell
+.\mvnw.cmd clean test
+```
+
+---
+
+## 👨‍💻 Author
+
+**Ayush Mamgain**
+
+Book Management API — Internship Project
